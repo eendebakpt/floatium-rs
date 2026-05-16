@@ -165,6 +165,43 @@ def test_str_subclass_with_float_dunder():
         assert float("8") == 8.0
 
 
+def test_format_empty_spec_uses_str_on_float_subclass():
+    """format(x, "") on a float subclass must dispatch to __str__.
+
+    Regression: an empty format spec is by definition str(self); for a
+    float subclass with an overridden __str__ it must follow __str__,
+    not format the numeric value (CPython test_enum.test_overridden_str).
+    """
+    class F(float):
+        def __str__(self):
+            return "custom!"
+
+    with floatium_rs.enabled():
+        x = F(4.4)
+        assert format(x, "") == "custom!"
+        assert format(x) == "custom!"
+        assert f"{x}" == "custom!"
+        assert format(4.4, "") == "4.4"      # plain float unaffected
+        assert format(x, ".1f") == "4.4"     # non-empty spec still formats
+
+
+def test_format_empty_spec_reprenum_float():
+    """ReprEnum float-mixin enum with overridden __str__: format() follows it."""
+    from enum import ReprEnum
+
+    with floatium_rs.enabled():
+        class FloatEnum(float, ReprEnum):
+            first = 4.4
+            second = 5.5
+
+            def __str__(self):
+                return self.name.upper()
+
+        assert format(FloatEnum.first) == "FIRST"
+        assert format(FloatEnum.first, "") == "FIRST"
+        assert format(FloatEnum.second) == "SECOND"
+
+
 def test_underscores_and_specials_fall_through():
     """Underscored / inf / nan literals still parse (via the original)."""
     with floatium_rs.enabled():

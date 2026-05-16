@@ -136,6 +136,17 @@ unsafe extern "C" fn floatium_float_format(
         None => return ptr::null_mut(),
     };
 
+    // An empty format spec is, by definition, str(self) — and stock
+    // float.__format__ implements it that way. For a float *subclass*
+    // with an overridden __str__ (e.g. ReprEnum float-mixin enum
+    // members), format(m) must dispatch to __str__, not format the
+    // numeric value. For a plain float, PyObject_Str routes through the
+    // patched tp_repr, so output is unchanged. (CPython test_enum:
+    // test_overridden_str.)
+    if spec_str.is_empty() {
+        return ffi::PyObject_Str(self_);
+    }
+
     if let Some((code, precision, flags)) = parse_simple_spec(spec_str) {
         let d = ffi::PyFloat_AsDouble(self_);
         let s = double_to_string(fmt_backend(), d, code, precision, flags);
