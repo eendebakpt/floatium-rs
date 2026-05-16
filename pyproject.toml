@@ -1,0 +1,46 @@
+[build-system]
+requires = ["maturin>=1.7,<2"]
+build-backend = "maturin"
+
+[project]
+name = "floatium-rs"
+version = "0.1.0"
+description = "Rust-backed drop-in replacement for CPython float formatting/parsing. Sibling of floatium; demonstrator for the Rust-in-CPython case."
+readme = "README.md"
+license = { text = "MIT" }
+authors = [{ name = "Pieter Eendebak", email = "pieter.eendebak@gmail.com" }]
+requires-python = ">=3.11"
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: Implementation :: CPython",
+    "Programming Language :: Rust",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+keywords = ["cpython", "float", "dtoa", "rust", "zmij", "repr", "format"]
+
+[project.urls]
+Homepage = "https://github.com/eendebakpt/floatium-rs"
+Repository = "https://github.com/eendebakpt/floatium-rs"
+
+[project.optional-dependencies]
+test = ["pytest>=8"]
+
+[tool.maturin]
+# The Rust cdylib is built into the floatium_rs package as `_ext`.
+module-name = "floatium_rs._ext"
+# Mixed Rust/Python layout: the floatium_rs/ package sits next to
+# Cargo.toml and is auto-detected.
+# The autopatch .pth must land at the site-packages root so site.py
+# runs the hook at interpreter startup. Named distinctly from
+# `floatium_rs.pth` — maturin's editable install generates a file by
+# that exact name for its path entry, so the hook uses a different
+# name to avoid the collision.
+include = [{ path = "floatium-rs-autopatch.pth", format = "wheel" }]
+
+[tool.pytest.ini_options]
+minversion = "8.0"
+testpaths = ["tests"]
+filterwarnings = ["error"]
