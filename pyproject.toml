@@ -4,7 +4,7 @@ build-backend = "maturin"
 
 [project]
 name = "floatium-rs"
-version = "0.1.0"
+version = "0.1.1"
 description = "Rust-backed drop-in replacement for CPython float formatting/parsing. Sibling of floatium; demonstrator for the Rust-in-CPython case."
 readme = "README.md"
 license = { text = "MIT" }

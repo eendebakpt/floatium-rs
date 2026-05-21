@@ -15,7 +15,6 @@ floatium's own knobs.
 from __future__ import annotations
 
 import os
-from pathlib import Path
 
 _MARKER_NAME = "floatium-rs-autopatch.disabled"
 
@@ -34,8 +33,8 @@ def _env_override() -> bool | None:
 
 def _marker_present() -> bool:
     try:
-        sp = Path(__file__).resolve().parent.parent
-        return (sp / _MARKER_NAME).is_file()
+        sp = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+        return os.path.isfile(os.path.join(sp, _MARKER_NAME))
     except Exception:  # noqa: BLE001 — never break startup
         return False
 

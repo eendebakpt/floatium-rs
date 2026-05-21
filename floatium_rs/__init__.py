@@ -23,9 +23,6 @@ environment with ``python -m floatium_rs disable``, or temporarily with
 
 from __future__ import annotations
 
-from contextlib import contextmanager
-from typing import Iterator
-
 from floatium_rs import _ext
 
 __all__ = [
@@ -37,7 +34,7 @@ __all__ = [
     "__version__",
 ]
 
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 
 
 def install(
@@ -74,27 +71,38 @@ def info() -> dict:
     return _ext.info()
 
 
-@contextmanager
-def enabled(
-    active: bool = True,
-    format_backend: str | None = None,
-    parse_backend: str | None = None,
-) -> Iterator[None]:
+class enabled:
     """Scoped patching / unpatching, restoring the entry state on exit.
 
     ``enabled(True)`` (default) ensures floatium-rs is installed within
     the block; ``enabled(False)`` ensures it is *not*. Either way the
     state at block entry is restored on exit.
     """
-    was_patched = is_patched()
-    if active and not was_patched:
-        install(format_backend=format_backend, parse_backend=parse_backend)
-    elif not active and was_patched:
-        uninstall()
-    try:
-        yield
-    finally:
-        if was_patched and not is_patched():
-            install(format_backend=format_backend, parse_backend=parse_backend)
-        elif not was_patched and is_patched():
+
+    __slots__ = ("_active", "_format_backend", "_parse_backend", "_was_patched")
+
+    def __init__(
+        self,
+        active: bool = True,
+        format_backend: str | None = None,
+        parse_backend: str | None = None,
+    ) -> None:
+        self._active = active
+        self._format_backend = format_backend
+        self._parse_backend = parse_backend
+        self._was_patched = False
+
+    def __enter__(self) -> None:
+        self._was_patched = is_patched()
+        if self._active and not self._was_patched:
+            install(format_backend=self._format_backend, parse_backend=self._parse_backend)
+        elif not self._active and self._was_patched:
             uninstall()
+        return None
+
+    def __exit__(self, exc_type, exc, tb) -> None:
+        if self._was_patched and not is_patched():
+            install(format_backend=self._format_backend, parse_backend=self._parse_backend)
+        elif not self._was_patched and is_patched():
+            uninstall()
+        return None
